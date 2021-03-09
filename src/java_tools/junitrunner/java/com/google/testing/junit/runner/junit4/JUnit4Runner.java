@@ -94,6 +94,7 @@ public class JUnit4Runner {
     Filter shardingFilter = model.getShardingFilter();
 
     Request filteredRequest = applyFilters(request, shardingFilter,
+        config.getCategoriesFilter(),
         config.getTestIncludeFilterRegexp(),
         config.getTestExcludeFilterRegexp());
 
@@ -192,13 +193,18 @@ public class JUnit4Runner {
    * @return Filtered request (may be a request that delegates to
    *         {@link ErrorReportingRunner}
    */
-  private static Request applyFilters(Request request, Filter shardingFilter,
+  private static Request applyFilters(Request request, Filter shardingFilter, Filter categoryFilter,
       @Nullable String testIncludeFilterRegexp, @Nullable String testExcludeFilterRegexp) {
-    // Allow the user to specify a filter on the command line
-    boolean allowNoTests = false;
-    Filter filter = Filter.ALL;
+    /*
+     * A typical use case of categories is to submit many test classes and select from them the tests matching the
+     * desired categories, so we don't want to fail when one of the classes returns no matching tests. Also, if you
+     * filter a sharded test to run one test, we don't want all the shards but one to fail.
+     */
+    boolean allowNoTests = (categoryFilter != Filter.ALL || shardingFilter != Filter.ALL);
+    Filter filter = categoryFilter;
     if (testIncludeFilterRegexp != null) {
-      filter = RegExTestCaseFilter.include(testIncludeFilterRegexp);
+      Filter includeFilter = RegExTestCaseFilter.include(testIncludeFilterRegexp);
+      filter = filter.intersect(includeFilter);
     }
 
     if (testExcludeFilterRegexp != null) {
@@ -210,15 +216,14 @@ public class JUnit4Runner {
       try {
         request = applyFilter(request, filter);
       } catch (NoTestsRemainException e) {
-        return createErrorReportingRequestForFilterError(filter);
+        if (allowNoTests) {
+          return Request.runner(new NoOpRunner());
+        } else {
+          return createErrorReportingRequestForFilterError(filter);
+        }
       }
-
-      /*
-       * If you filter a sharded test to run one test, we don't want all the
-       * shards but one to fail.
-       */
-      allowNoTests = (shardingFilter != Filter.ALL);
     }
+
 
     // Sharding
     if (shardingFilter != Filter.ALL) {

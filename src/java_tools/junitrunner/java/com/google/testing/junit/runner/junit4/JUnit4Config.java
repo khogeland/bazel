@@ -14,6 +14,9 @@
 
 package com.google.testing.junit.runner.junit4;
 
+import org.junit.experimental.categories.Categories;
+import org.junit.runner.manipulation.Filter;
+
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -33,6 +36,7 @@ class JUnit4Config {
   private final boolean testRunnerFailFast;
   private final String testIncludeFilterRegexp;
   private final String testExcludeFilterRegexp;
+  private final Filter categoriesFilter;
   @Nullable private final Path xmlOutputPath;
   private final String junitApiVersion;
   private final boolean shouldInstallSecurityManager;
@@ -40,45 +44,51 @@ class JUnit4Config {
   private static final String XML_OUTPUT_FILE_ENV_VAR = "XML_OUTPUT_FILE";
 
   public JUnit4Config(
-      String testIncludeFilterRegexp,
-      String testExcludeFilterRegexp,
-      @Nullable Path outputXmlFilePath) {
+          String testIncludeFilterRegexp,
+          String testExcludeFilterRegexp,
+          @Nullable Filter categoriesFilter,
+          @Nullable Path outputXmlFilePath) {
     this(
         false,
         testIncludeFilterRegexp,
         testExcludeFilterRegexp,
+        categoriesFilter,
         outputXmlFilePath,
         System.getProperties());
   }
 
   public JUnit4Config(
-      boolean testRunnerFailFast, String testIncludeFilterRegexp, String testExcludeFilterRegexp) {
+      boolean testRunnerFailFast, String testIncludeFilterRegexp, String testExcludeFilterRegexp, Filter categoriesFilter) {
     this(
         testRunnerFailFast,
         testIncludeFilterRegexp,
         testExcludeFilterRegexp,
+        categoriesFilter,
         null,
         System.getProperties());
   }
 
   // VisibleForTesting
   JUnit4Config(
-      String testIncludeFilterRegexp,
-      String testExcludeFilterRegexp,
-      @Nullable Path xmlOutputPath,
-      Properties systemProperties) {
-    this(false, testIncludeFilterRegexp, testExcludeFilterRegexp, xmlOutputPath, systemProperties);
+          String testIncludeFilterRegexp,
+          String testExcludeFilterRegexp,
+          @Nullable Path xmlOutputPath,
+          Properties systemProperties) {
+    // TODO(khogeland): Include Categories filter in tests
+    this(false, testIncludeFilterRegexp, testExcludeFilterRegexp, null, xmlOutputPath, systemProperties);
   }
 
   private JUnit4Config(
-      boolean testRunnerFailFast,
-      String testIncludeFilterRegexp,
-      String testExcludeFilterRegexp,
-      @Nullable Path xmlOutputPath,
-      Properties systemProperties) {
+          boolean testRunnerFailFast,
+          String testIncludeFilterRegexp,
+          String testExcludeFilterRegexp,
+          @Nullable Filter categoriesFilter,
+          @Nullable Path xmlOutputPath,
+          Properties systemProperties) {
     this.testRunnerFailFast = testRunnerFailFast;
     this.testIncludeFilterRegexp = testIncludeFilterRegexp;
     this.testExcludeFilterRegexp = testExcludeFilterRegexp;
+    this.categoriesFilter = categoriesFilter;
     this.xmlOutputPath = xmlOutputPath;
     junitApiVersion = systemProperties.getProperty(JUNIT_API_VERSION_PROPERTY, "1").trim();
     shouldInstallSecurityManager = installSecurityManager(systemProperties);
@@ -159,4 +169,12 @@ class JUnit4Config {
   public String getTestExcludeFilterRegexp() {
     return testExcludeFilterRegexp;
   }
+
+  /**
+   * Returns the category filter, or Filter.ALL if it was not specified.
+   */
+  public Filter getCategoriesFilter() {
+    return categoriesFilter == null ? Filter.ALL : categoriesFilter;
+  }
+
 }

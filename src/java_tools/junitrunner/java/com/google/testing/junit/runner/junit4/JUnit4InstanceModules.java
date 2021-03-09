@@ -14,9 +14,9 @@
 
 package com.google.testing.junit.runner.junit4;
 
+import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.List;
-import javax.inject.Singleton;
 
 /**
  * Utility classes which hold state or are, for testing purposes, implemented with non-static
@@ -71,7 +71,8 @@ public final class JUnit4InstanceModules {
       return new JUnit4Config(
           options.getTestRunnerFailFast(),
           options.getTestIncludeFilter(),
-          options.getTestExcludeFilter());
+          options.getTestExcludeFilter(),
+          options.getCategoriesFilter());
     }
   }
 
