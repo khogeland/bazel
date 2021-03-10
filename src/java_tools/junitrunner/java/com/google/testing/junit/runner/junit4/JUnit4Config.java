@@ -222,10 +222,10 @@ class JUnit4Config {
   }
 
   /**
-   * Returns the category filter, or Filter.ALL if it was not specified.
+   * Returns the category filter, or Filter.ALL if the options were not specified.
    */
   public Filter getCategoriesFilter() {
-    return categoriesFilter == null ? Filter.ALL : categoriesFilter;
+    return categoriesFilter;
   }
 
 }
