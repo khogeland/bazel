@@ -54,5 +54,4 @@ public final class SuiteTrimmingFilter extends Filter {
     }
     return false;
   }
-
 }

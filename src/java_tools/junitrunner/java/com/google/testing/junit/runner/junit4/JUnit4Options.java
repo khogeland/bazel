@@ -18,7 +18,14 @@ import com.google.testing.junit.junit4.runner.CategoryFilter;
 import org.junit.runner.manipulation.Filter;
 
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Simple options parser for JUnit 4.
@@ -107,7 +114,7 @@ class JUnit4Options {
     return new CategoryFilter(includes, excludes);
   }
 
-  private static Set<Class<?>> resolveClassList(String listValue) throws ClassNotFoundException {
+  private static Set<Class<?>> resolveClassList(@Nullable String listValue) throws ClassNotFoundException {
     if (listValue == null || "".equals(listValue)) {
       return Collections.emptySet();
     }

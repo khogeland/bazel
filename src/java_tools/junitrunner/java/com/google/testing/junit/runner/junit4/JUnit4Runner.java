@@ -184,6 +184,7 @@ public class JUnit4Runner {
    *
    * @param request Request to filter
    * @param shardingFilter Sharding filter to use; {@link Filter#ALL} to not do sharding
+   * @param categoryFilter Category filter to use, or {@link Filter#ALL}
    * @param testIncludeFilterRegexp String denoting a regular expression with which
    *     to filter tests.  Only test descriptions that match this regular
    *     expression will be run.  If {@code null}, tests will not be filtered.
@@ -196,12 +197,13 @@ public class JUnit4Runner {
   private static Request applyFilters(Request request, Filter shardingFilter, Filter categoryFilter,
       @Nullable String testIncludeFilterRegexp, @Nullable String testExcludeFilterRegexp) {
     /*
-     * A typical use case of categories is to submit many test classes and select from them the tests matching the
-     * desired categories, so we don't want to fail when one of the classes returns no matching tests. Also, if you
+     * A typical use case of categories is to submit many test suites and select from them the tests matching the
+     * desired categories, so we don't want to fail when one of the suites returns no matching tests. Also, if you
      * filter a sharded test to run one test, we don't want all the shards but one to fail.
      */
     boolean allowNoTests = (categoryFilter != Filter.ALL || shardingFilter != Filter.ALL);
     Filter filter = categoryFilter;
+
     if (testIncludeFilterRegexp != null) {
       Filter includeFilter = RegExTestCaseFilter.include(testIncludeFilterRegexp);
       filter = filter.intersect(includeFilter);
@@ -211,19 +213,6 @@ public class JUnit4Runner {
       Filter excludeFilter = RegExTestCaseFilter.exclude(testExcludeFilterRegexp);
       filter = filter.intersect(excludeFilter);
     }
-
-    if (testIncludeFilterRegexp != null || testExcludeFilterRegexp != null) {
-      try {
-        request = applyFilter(request, filter);
-      } catch (NoTestsRemainException e) {
-        if (allowNoTests) {
-          return Request.runner(new NoOpRunner());
-        } else {
-          return createErrorReportingRequestForFilterError(filter);
-        }
-      }
-    }
-
 
     // Sharding
     if (shardingFilter != Filter.ALL) {
