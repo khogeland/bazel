@@ -38,7 +38,7 @@ public class JUnit4ConfigTest {
   }
 
   private JUnit4Config createConfigWithProperties(Properties properties) {
-    return new JUnit4Config("", null, null, properties);
+    return new JUnit4Config("", null, null, null, properties);
   }
 
   @Test

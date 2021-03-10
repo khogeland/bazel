@@ -71,10 +71,10 @@ class JUnit4Config {
   JUnit4Config(
           String testIncludeFilterRegexp,
           String testExcludeFilterRegexp,
+          @Nullable Filter categoriesFilter,
           @Nullable Path xmlOutputPath,
           Properties systemProperties) {
-    // TODO(khogeland): Include Categories filter in tests
-    this(false, testIncludeFilterRegexp, testExcludeFilterRegexp, null, xmlOutputPath, systemProperties);
+    this(false, testIncludeFilterRegexp, testExcludeFilterRegexp, categoriesFilter, xmlOutputPath, systemProperties);
   }
 
   private JUnit4Config(

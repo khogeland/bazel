@@ -3,6 +3,7 @@ package com.google.testing.junit.junit4.runner;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.Description;
 import org.junit.runner.manipulation.Filter;
+import org.junit.runner.manipulation.NoTestsRemainException;
 
 import java.util.Set;
 import java.util.StringJoiner;

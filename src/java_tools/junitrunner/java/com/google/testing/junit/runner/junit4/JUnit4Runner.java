@@ -202,7 +202,9 @@ public class JUnit4Runner {
       try {
         request = applyFilter(request, filter);
       } catch (NoTestsRemainException e) {
-        // We don't want to fail when one of the suites or shards returns no matching tests.
+        // A common use case of categories is to group tests orthogonally to suite
+        // organization (flakiness, runtime, resource usage, etc.). So we don't want
+        // to fail a suite or shard if it does not contain any matching tests.
         return Request.runner(new NoOpRunner());
       }
     }
@@ -217,7 +219,10 @@ public class JUnit4Runner {
       filter = filter.intersect(excludeFilter);
     }
 
+    boolean allowEmptyShard = false;
     if (testIncludeFilterRegexp != null || testExcludeFilterRegexp != null) {
+      // If we filter a sharded test suite, we don't want to fail all but one shard.
+      allowEmptyShard = true;
       try {
         request = applyFilter(request, filter);
       } catch (NoTestsRemainException e) {
@@ -231,8 +236,13 @@ public class JUnit4Runner {
       try {
         request = applyFilter(request, filter);
       } catch (NoTestsRemainException e) {
-        // If you filter a sharded test suite to run one test, we don't want all the shards but one to fail.
-        return Request.runner(new NoOpRunner());
+        if (allowEmptyShard) {
+          return Request.runner(new NoOpRunner());
+        } else {
+          // If we're here, sharding is configured incorrectly.
+          // The request is not filtered, so all shards should have tests.
+          return createErrorReportingRequestForFilterError(filter);
+        }
       }
     }
 
