@@ -24,6 +24,7 @@ import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runner.manipulation.Filter;
 import org.junit.runners.JUnit4;
 
 /**
@@ -37,6 +38,7 @@ public class JUnit4OptionsTest {
   @Test
   public void testParse_noArgs() throws Exception {
     JUnit4Options options = JUnit4Options.parse(EMPTY_ENV, ImmutableList.<String>of());
+    assertThat(options.getCategoriesFilter()).isEqualTo(Filter.ALL);
     assertThat(options.getTestIncludeFilter()).isNull();
     assertThat(options.getUnparsedArgs()).isEmpty();
   }
@@ -46,6 +48,18 @@ public class JUnit4OptionsTest {
     JUnit4Options options = JUnit4Options.parse(EMPTY_ENV, ImmutableList.of("--bar", "baz"));
     assertThat(options.getTestIncludeFilter()).isNull();
     assertThat(options.getUnparsedArgs()).isEqualTo(new String[] {"--bar", "baz"});
+  }
+
+  @Test
+  public void testParse_includeCategories() {
+    JUnit4Options options = JUnit4Options.parse(EMPTY_ENV, ImmutableList.of("--test_categories", "java.lang.Object"));
+    assertThat(options.getCategoriesFilter()).isNotEqualTo(Filter.ALL);
+  }
+
+  @Test
+  public void testParse_excludeCategories() {
+    JUnit4Options options = JUnit4Options.parse(EMPTY_ENV, ImmutableList.of("--test_exclude_categories", "java.lang.Object"));
+    assertThat(options.getCategoriesFilter()).isNotEqualTo(Filter.ALL);
   }
 
   @Test

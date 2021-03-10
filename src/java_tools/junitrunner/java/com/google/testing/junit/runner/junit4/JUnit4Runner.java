@@ -196,13 +196,16 @@ public class JUnit4Runner {
    */
   private static Request applyFilters(Request request, Filter shardingFilter, Filter categoryFilter,
       @Nullable String testIncludeFilterRegexp, @Nullable String testExcludeFilterRegexp) {
-    /*
-     * A typical use case of categories is to submit many test suites and select from them the tests matching the
-     * desired categories, so we don't want to fail when one of the suites returns no matching tests. Also, if you
-     * filter a sharded test to run one test, we don't want all the shards but one to fail.
-     */
-    boolean allowNoTests = (categoryFilter != Filter.ALL || shardingFilter != Filter.ALL);
     Filter filter = categoryFilter;
+
+    if (categoryFilter != Filter.ALL) {
+      try {
+        request = applyFilter(request, filter);
+      } catch (NoTestsRemainException e) {
+        // We don't want to fail when one of the suites or shards returns no matching tests.
+        return Request.runner(new NoOpRunner());
+      }
+    }
 
     if (testIncludeFilterRegexp != null) {
       Filter includeFilter = RegExTestCaseFilter.include(testIncludeFilterRegexp);
@@ -214,22 +217,25 @@ public class JUnit4Runner {
       filter = filter.intersect(excludeFilter);
     }
 
-    // Sharding
-    if (shardingFilter != Filter.ALL) {
-      filter = filter.intersect(shardingFilter);
-    }
-
-    if (filter != Filter.ALL) {
+    if (testIncludeFilterRegexp != null || testExcludeFilterRegexp != null) {
       try {
         request = applyFilter(request, filter);
       } catch (NoTestsRemainException e) {
-        if (allowNoTests) {
-          return Request.runner(new NoOpRunner());
-        } else {
-          return createErrorReportingRequestForFilterError(filter);
-        }
+        return createErrorReportingRequestForFilterError(filter);
       }
     }
+
+    // Sharding
+    if (shardingFilter != Filter.ALL) {
+      filter = filter.intersect(shardingFilter);
+      try {
+        request = applyFilter(request, filter);
+      } catch (NoTestsRemainException e) {
+        // If you filter a sharded test suite to run one test, we don't want all the shards but one to fail.
+        return Request.runner(new NoOpRunner());
+      }
+    }
+
     return request;
   }
 
