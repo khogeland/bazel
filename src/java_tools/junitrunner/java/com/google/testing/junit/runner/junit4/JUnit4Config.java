@@ -14,7 +14,6 @@
 
 package com.google.testing.junit.runner.junit4;
 
-import org.junit.experimental.categories.Categories;
 import org.junit.runner.manipulation.Filter;
 
 import java.nio.file.FileSystems;

@@ -14,7 +14,7 @@
 
 package com.google.testing.junit.runner.junit4;
 
-import org.junit.experimental.categories.Categories;
+import com.google.testing.junit.junit4.runner.CategoryFilter;
 import org.junit.runner.manipulation.Filter;
 
 import javax.annotation.Nullable;
@@ -104,7 +104,7 @@ class JUnit4Options {
     if (includes.isEmpty() && excludes.isEmpty()) {
       return Filter.ALL;
     }
-    return Categories.CategoryFilter.categoryFilter(true, includes, true, excludes);
+    return new CategoryFilter(includes, excludes);
   }
 
   private static Set<Class<?>> resolveClassList(String listValue) throws ClassNotFoundException {
