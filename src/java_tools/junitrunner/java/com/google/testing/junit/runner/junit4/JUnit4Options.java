@@ -14,18 +14,12 @@
 
 package com.google.testing.junit.runner.junit4;
 
-import com.google.testing.junit.junit4.runner.CategoryFilter;
-import org.junit.runner.manipulation.Filter;
-
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Simple options parser for JUnit 4.
@@ -88,57 +82,21 @@ class JUnit4Options {
     }
     boolean testRunnerFailFast = "1".equals(envVars.get(TESTBRIDGE_TEST_RUNNER_FAIL_FAST));
 
-    Filter categoriesFilter;
-    try {
-      categoriesFilter = parseCategoriesFilter(
-              optionsMap.get(TEST_INCLUDE_CATEGORIES_FILTER_OPTION),
-              optionsMap.get(TEST_EXCLUDE_CATEGORIES_FILTER_OPTION)
-      );
-    } catch (ClassNotFoundException e) {
-      throw new RuntimeException(e);
-    }
     return new JUnit4Options(
         testRunnerFailFast,
         optionsMap.get(TEST_INCLUDE_FILTER_OPTION),
         optionsMap.get(TEST_EXCLUDE_FILTER_OPTION),
-        categoriesFilter,
+        optionsMap.get(TEST_INCLUDE_CATEGORIES_FILTER_OPTION),
+        optionsMap.get(TEST_EXCLUDE_CATEGORIES_FILTER_OPTION),
         unparsedArgs.toArray(new String[0]));
-  }
-
-  private static Filter parseCategoriesFilter(@Nullable String includesValue, @Nullable String excludesValue) throws ClassNotFoundException {
-    Set<Class<?>> includes = resolveClassList(includesValue);
-    Set<Class<?>> excludes = resolveClassList(excludesValue);
-    if (includes.isEmpty() && excludes.isEmpty()) {
-      return Filter.ALL;
-    }
-    return new CategoryFilter(includes, excludes);
-  }
-
-  private static Set<Class<?>> resolveClassList(@Nullable String listValue) throws ClassNotFoundException {
-    if (listValue == null || "".equals(listValue)) {
-      return Collections.emptySet();
-    }
-    String[] parts = listValue.split(",");
-    Set<Class<?>> classes = new HashSet<>();
-    List<String> missingClasses = new ArrayList<>();
-    for (String className : parts) {
-      try {
-        classes.add(Class.forName(className));
-      } catch (ClassNotFoundException e) {
-        missingClasses.add(className);
-      }
-    }
-    if (!missingClasses.isEmpty()) {
-      throw new ClassNotFoundException("The following category classes could not be found: " + String.join(",", missingClasses));
-    }
-    return classes;
   }
 
 
   private final boolean testRunnerFailFast;
   private final String testIncludeFilter;
   private final String testExcludeFilter;
-  private final Filter categoriesFilter;
+  private final String testIncludeCategories;
+  private final String testExcludeCategories;
   private final String[] unparsedArgs;
 
   // VisibleForTesting
@@ -146,12 +104,14 @@ class JUnit4Options {
       boolean testRunnerFailFast,
       @Nullable String testIncludeFilter,
       @Nullable String testExcludeFilter,
-      @Nullable Filter categoriesFilter,
+      @Nullable String testIncludeCategories,
+      @Nullable String testExcludeCategories,
       String[] unparsedArgs) {
     this.testRunnerFailFast = testRunnerFailFast;
     this.testIncludeFilter = testIncludeFilter;
     this.testExcludeFilter = testExcludeFilter;
-    this.categoriesFilter = categoriesFilter;
+    this.testIncludeCategories = testIncludeCategories;
+    this.testExcludeCategories = testExcludeCategories;
     this.unparsedArgs = unparsedArgs;
   }
 
@@ -172,17 +132,27 @@ class JUnit4Options {
   }
 
   /**
+   * Returns the value of the test_categories option, or <code>null</code> if
+   * it was not specified.
+   */
+  String getTestIncludeCategories() {
+    return testIncludeCategories;
+  }
+
+  /**
+   * Returns the value of the test_exclude_categories option, or <code>null</code> if
+   * it was not specified.
+   */
+  String getTestExcludeCategories() {
+    return testExcludeCategories;
+  }
+
+  /**
    * Returns the value of the test_exclude_filter option, or <code>null</code> if
    * it was not specified.
    */
   String getTestExcludeFilter() {
     return testExcludeFilter;
-  }
-
-
-  // TODO(khogeland): might not be the right location (JUnit4Config?)
-  Filter getCategoriesFilter() {
-    return categoriesFilter == null ? Filter.ALL : categoriesFilter;
   }
 
   /**
